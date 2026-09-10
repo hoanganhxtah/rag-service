@@ -1,0 +1,32 @@
+# RAG Service — retrieval and ingestion
+# Service này sở hữu toàn bộ dependency nặng liên quan tới ML/vector store.
+# Sau khi tách xong, app/requirements.txt không còn cần chúng nữa.
+
+# Web framework + MCP adapter
+fastapi>=0.115.0
+fastapi-mcp>=0.3.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.0
+pydantic-settings>=2.0
+python-dotenv>=1.0.0
+
+# Embeddings
+sentence-transformers>=5.0,<6
+transformers>=4.44,<6
+torch==2.6.0
+torchvision==0.21.0
+langchain-google-genai          # chỉ cần khi RAG_EMBEDDING_PROVIDER=gemini
+
+# Vector stores
+qdrant-client
+langchain-qdrant
+rank-bm25>=0.2.2,<1
+
+# Document ingestion
+langchain-core
+langchain-text-splitters
+docling
+pypdf
+requests>=2.32,<3
+beautifulsoup4>=4.12,<5
+truststore>=0.10,<1
