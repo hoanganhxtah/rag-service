@@ -1,26 +1,9 @@
-"""RAG Service — retrieval + ingestion cho internal knowledge base.
-
-Expose đồng thời:
-- REST API tại ``RAG_SERVICE_CONTEXT_PATH`` (default ``/api/v1``) — hợp đồng chính
-- MCP Streamable HTTP tại ``/mcp`` — adapter cho MCP client
-
-Chạy:
-    python app/main.py                      (từ rag_service/)
-    python -m app.main                      (từ rag_service/)
-
-Các import nội bộ là relative theo package ``app`` nên service không phụ thuộc
-tên hoặc layout thư mục cha của monorepo.
-"""
-
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from pathlib import Path
 import sys
 
-# Hỗ trợ cả ``python -m app.main`` (khuyến nghị) và ``python app/main.py``.
-# Khi chạy file trực tiếp, Python chỉ thêm ``app/`` vào sys.path; thêm service
-# root để package ``app`` có thể được resolve cho các relative import bên dưới.
 SERVICE_ROOT = Path(__file__).resolve().parents[1]
 if __package__ in {None, ""}:
     sys.path.insert(0, str(SERVICE_ROOT))
@@ -45,9 +28,6 @@ CONTEXT_PATH = service_settings.CONTEXT_PATH
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Store được tạo MỘT LẦN ở đây rồi chia sẻ cho mọi request. Bắt buộc với
-    # Qdrant embedded: mỗi client mở local path đều cố lấy file lock, nên tạo
-    # store per-request là chắc chắn lỗi.
     store = QdrantStore()
     bm25 = BM25Index()
     bm25.rebuild(store.all_documents())
@@ -121,7 +101,6 @@ def _mount_mcp(fastapi_app: FastAPI) -> None:
         mcp.mount_http()
         logger.info("MCP mounted tại /mcp")
     except ImportError:
-        # REST vẫn dùng được bình thường mà không có fastapi-mcp.
         logger.warning(
             "fastapi-mcp chưa được cài — bỏ qua MCP endpoint. REST API vẫn hoạt động."
         )
@@ -135,12 +114,6 @@ if __name__ == "__main__":
 
     import uvicorn
 
-    # reload_dirs giới hạn ở chính rag_service. Nếu không, uvicorn watch cả
-    # workspace root và service sẽ restart mỗi khi ai đó sửa file trong app/ hay
-    # ui/ — startup mất vài chục giây (load embedding model) nên restart oan như
-    # vậy trông y hệt service bị treo.
-    # Reload spawn process phải import được cùng package path. Với chế độ chạy
-    # độc lập, cwd về service root để ``app.main`` luôn resolve đúng.
     if __package__ == "app":
         os.chdir(SERVICE_ROOT)
     uvicorn.run(
