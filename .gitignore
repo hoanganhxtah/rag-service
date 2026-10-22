@@ -157,3 +157,6 @@ data/
 # test
 tests/
 test.py
+
+# script
+scripts/
