@@ -1,23 +1,12 @@
 """Vector store contract for the RAG service.
-
-Trước khi tách, ``qdrant.py`` và ``chromadb.py`` chỉ "giống nhau vì tình cờ":
-cùng có ``query`` / ``count`` / ``add_documents`` nhưng không có contract nào
-viết ra, và mỗi bên trả shape hơi khác. Module này viết contract đó ra thành
-văn để người tiếp nhận service biết chính xác phải implement gì khi thêm backend
-mới (pgvector, Milvus, ...).
-
-Điểm khác biệt so với code cũ: ``search()`` trả ``list[ScoredDocument]`` phẳng,
+ ``search()`` trả ``list[ScoredDocument]`` phẳng,
 không phải dict shape lồng ``{"documents": [[...]]}``. Shape lồng đó là chi tiết
 nội bộ của Chroma bị rò ra khắp nơi, và nó không mang thêm thông tin gì.
 """
-
 from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Any, Optional, Protocol, runtime_checkable
-
 from langchain_core.documents import Document
-
 
 @dataclass(frozen=True)
 class ScoredDocument:
